@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Demo 5: Load Files into base64 encoded JSON</title>
+    <!-- Main CSS -->
+    <link href="css/main.css" rel="stylesheet">
+    <!-- FileSaver is needed to save the generated ZIP file as Download -->
+    <script src="js/filesaver.js"></script>
+    <script src="js/loadfile4dom.js"></script>
+    <script>
+        var date_now = new Date();
+        var vJSON = {
+          "date": date_now.toDateString(),
+          "generator": "https://niehausbert.gitlab.io/loadfile4dom/demo5_file2base64_json.html",
+          "files": []
+        };
+        var lf4d = new LoadFile4DOM();
+        var options = {
+          "base64": true,
+          "debug": false // if true, it will show the hidden <input type="file" ...> loaders in DOM
+        };
+        lf4d.init(document,options);
+        //-----------------------------------------------
+        //----- Create a new Loader "files4json" --------
+        //-----------------------------------------------
+        var files4json = lf4d.get_loader_options("addfiles4json","all");
+        files4json.multiple = true;
+        // Define what to do with the loaded data
+        files4json.onload = function (data,err) {
+          if (err) {
+            // do something on error, perr contains error message
+            console.error(err);
+          } else {
+            // do something with the file content in data e.g. store  in a HTML textarea (e.g. <textarea id="mytextarea" ...>
+            console.log("CALL: files4json.onload('" + data.name + "')");
+            var vNode = document.getElementById("outlist");
+            if (vNode) {
+              //console.log("CALL: files4json.onload('" + data.name + "'): "+JSON.stringify(data,null,4));
+              vNode.innerHTML = vNode.innerHTML + "<li>File <tt>" + data.name + "</tt> added to JSON</li>";
+              vJSON.files.push(data)
+            } else {
+              console.error("ERROR: DOM Element 'outlist' does not exist!");
+            }
+
+          }
+        };
+        //-----------------------------------------------
+        // create the load dialog 'files4json'
+        lf4d.create_load_dialog(files4json);
+        //-----------------------------------------------
+        //--- DOWNLOAD JSON -----------------------------
+        //---Use FileSaver.js by Eli Grey to save JSON---
+        //-----------------------------------------------
+        function save2file(pFilename,pContent) {
+          var file = new File([pContent], {type: "text/plain;charset=utf-8"});
+          // saveAs() is a filesaver.js function
+          saveAs(file,pFilename);
+        }
+        //-----------------------------------------------
+        function download_json(pFilename,pJSON) {
+          var vFilename = pFilename || "my_loaded_files.json";
+          console.log("download_json('"+vFilename+"',pJSON)");
+          pJSON = pJSON || {
+            "date": null,
+            "generator": "https://niehausbert.gitlab.io/loadfile4dom/demo5_file2base64_json.html",
+            "files": []
+          };
+          var vStringJSON = JSON.stringify(pJSON,null,4);
+
+          save2file(vFilename,vStringJSON);
+        }
+
+
+
+    </script>
+  </head>
+  <body onload="lf4d.create()">
+    <h2>LoadFile4DOM - Load Files and Save files in base64 encoded JSON</h2>
+    <h3><a href="https://en.wikiversity.org/wiki/AppLSAC" target="_blank">AppLSAC:</a> Browser as Runtime Environment of WebApps</h3>
+    <hr>
+    <!-- Inject Loaded Filenames into 'outlist' -->
+    <b>Loaded Files:</b>
+    <button onclick="lf4d.open_dialog('addfiles4json');return false">Add File to JSON Dialog</button>
+    <br>
+    <ul id="outlist">
+    </ul>
+    <hr>
+    <!-- Used Libraries -->
+    <button onclick="download_json('files4json.json',vJSON);return false">Save Generated JSON</button>
+    <hr>
+    <center>
+      <b>
+        <a href="index.html">&lt;&lt; Demo Applications with LoadFile4DOM</a>
+      </b>
+    </center>
+
+  </body>
+
+</html>

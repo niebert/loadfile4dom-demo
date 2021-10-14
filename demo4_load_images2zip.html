@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Demo 4: Load Images into ZIP file and display in DOM</title>
+    <!-- Main CSS -->
+    <link href="css/main.css" rel="stylesheet">
+    <!-- JSZip is needed to handle ZIP files -->
+    <script src="js/jszip.js"></script>
+    <!-- FileSaver is needed to save the generated ZIP file as Download -->
+    <script src="js/filesaver.js"></script>
+    <script src="js/loadfile4dom.js"></script>
+    <script>
+        var zip = new JSZip();
+        zip.file("README.txt","LoadFile4DOM - Demo: Upload to ZIP\n\nThis is a ZIP-file created with LoadFile4DOM, that shows how to upload files into a ZIP-file with LoadFile4DOM. See https://niehausbert.gitlab.io/loadfile4dom/upload2zip.html ");
+        var lf4d = new LoadFile4DOM();
+        var options = {
+          "debug": false // if true, it will show the hidden <input type="file" ...> loaders in DOM
+        };
+        lf4d.init(document,options);
+        //-----------------------------------------------
+        //----- Create a new Loader "file2image" --------
+        //-----------------------------------------------
+        var file2image = lf4d.get_loader_options("addfile2image","image_thumb");
+        file2image.returntype = "tag";
+        file2image.width = 200;
+        file2image.multiple = true;
+        // Define what to do with the loaded data
+        file2image.onload = function (data,err) {
+          if (err) {
+            // do something on error, err contains error message
+            console.error(err);
+          } else {
+            // do something with the file content in data e.g. store  in a HTML textarea (e.g. <textarea id="mytextarea" ...>
+            console.log("CALL: file2image.onload('" + data.name + "')");
+            var vNode = document.getElementById("outlist");
+            if (vNode) {
+              //console.log("CALL: file2image.onload('" + data.name + "'): "+JSON.stringify(data,null,4));
+              vNode.innerHTML = vNode.innerHTML + "<br><tt>" + data.name + "</tt><br>" + data.tag + " ";
+              zip.file(data.name, data.file, {base64: true})
+            } else {
+              console.error("ERROR: DOM Element 'outlist' does not exist!");
+            }
+
+          }
+        };
+        // create the load dialog 'file2image'
+        lf4d.create_load_dialog(file2image);
+        //-----------------------------------------------
+        //--- DOWNLOAD ZIP ------------------------------
+        //---Use FileSaver.js by Eli Grey to save ZIP----
+        //-----------------------------------------------
+        function download_zip(pFilename,pZIP) {
+          var vFilename = pFilename || "my_loaded_files.zip";
+          pZIP.generateAsync({type:"blob"}).then(function (blob) { // 1) generate the zip file
+            saveAs(blob, vFilename);                          // 2) trigger the download
+          }, function (err) {
+            console.error("ERROR: generation of zip-file '" + vFilename + "' - "+err);
+          });
+        }
+        //-----------------------------------------------
+
+    </script>
+  </head>
+  <body onload="lf4d.create()">
+    <h2>LoadFile4DOM - Demo Load Images in Browser and Display in DOM</h2>
+    <h3><a href="https://en.wikiversity.org/wiki/AppLSAC" target="_blank">AppLSAC:</a> Browser as Runtime Environment of WebApps</h3>
+    The browser creates a zip-file with JSZip and adds the images files to zip. The MIME type of allowed files is <tt>image/*</tt>.
+    <hr>
+    <!-- Inject Loaded Filenames into 'outlist' -->
+    <b>Loaded Files:</b>
+    <button onclick="lf4d.open_dialog('addfile2image');return false">Add Image to ZIP Dialog</button>
+    <br>
+    <ul id="outlist">
+    </ul>
+    <hr>
+    <!-- Used Libraries -->
+    <button onclick="download_zip('myfiles.zip',zip);return false">Save Generated ZIP</button>
+    <hr>
+    <center>
+      <b>
+        <a href="index.html">&lt;&lt; Demo Applications with LoadFile4DOM</a>
+      </b>
+    </center>
+
+
+  </body>
+
+</html>

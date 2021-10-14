@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Demo 6: Load ZIP File and add multiple Files to ZIP</title>
+    <!-- Main CSS -->
+    <link href="css/main.css" rel="stylesheet">
+    <!-- JSZip is needed to handle ZIP files -->
+    <script src="js/jszip.js"></script>
+    <!-- FileSaver is needed to save the generated ZIP file as Download -->
+    <script src="js/filesaver.js"></script>
+    <script src="js/loadfile4dom.js"></script>
+    <script>
+        var zip = new JSZip();
+
+        function el(pID) {
+          return document.getElementById(pID);
+        }
+
+        //--- CREATE LoadFile4DOM Instance ----
+        var lf4d = new LoadFile4DOM();
+        var options = {
+          "debug": false // if true, it will show the hidden <input type="file" ...> loaders in DOM
+        };
+        lf4d.init(document,options);
+        //-----------------------------------------------
+        //----- Create a new Loader "loadzip" ----
+        //-----------------------------------------------
+        // this loader adds a predefined ZIP as default JSON
+        // other files can be added to ZIP.
+        // The final ZIP can be stored as JSON.
+        var loadzip = lf4d.get_loader_options("loader4zip","zip");
+        loadzip.returntype = "filehash";
+        loadzip.texfile2string = true;
+        // Define what to do with the loaded data
+        loadzip.onload = function (data,err) {
+          if (err) {
+            // do something on error, perr contains error message
+            console.error(err);
+          } else {
+            // do something with the file content in data e.g. store  in a HTML textarea (e.g. <textarea id="mytextarea" ...>
+            console.log("CALL: loadzip.onload('" + data.name + "')");
+            var vNode = el("outlist");
+            if (vNode) {
+              // clear outlist
+              vNode.innerHTML = "";
+              // store filename in text input element with the id "tFIlename"
+              el("tFilename").value = data.name;
+              // store ZIP data in JSZip instance.
+              var vZIP = new JSZip();
+              vZIP.loadAsync(data.file,{"base64":true}).then(function (zip) {
+                zip.forEach(function (relativePath, file){
+                    console.log("File in ZIP: ", relativePath);
+                    vNode.innerHTML = vNode.innerHTML + "<li>" + relativePath + "</li>";
+                });
+              });
+              //zip.file(data.name, data.file, {base64: true})
+            } else {
+              console.error("ERROR: DOM Element 'outlist' does not exist!");
+            }
+
+          }
+        };
+        // create the load dialog 'loadzip'
+        lf4d.create_load_dialog(loadzip);
+        //-----------------------------------------------
+
+        //-----------------------------------------------
+        //----- Create a new Loader "file2zip" ----------
+        //-----------------------------------------------
+        var file2zip = lf4d.get_loader_options("addfile2zip","all");
+        file2zip.returntype = "filehash";
+       // Define what to do with the loaded data
+        file2zip.onload = function (data,err) {
+          if (err) {
+            // do something on error, perr contains error message
+            console.error(err);
+          } else {
+            // do something with the file content in data e.g. store  in a HTML textarea (e.g. <textarea id="mytextarea" ...>
+            console.log("CALL: file2zip.onload('" + data.name + "')");
+            var vNode = document.getElementById("outlist");
+            if (vNode) {
+              vNode.innerHTML = vNode.innerHTML + "<li>" + data.name + "</li>";
+              zip.file(data.name, data.file, {base64: true})
+            } else {
+              console.error("ERROR: DOM Element 'outlist' does not exist!");
+            }
+
+          }
+        };
+        // create the load dialog 'file2zip'
+        lf4d.create_load_dialog(file2zip);
+        //-----------------------------------------------
+        //--- DOWNLOAD ZIP ------------------------------
+        //---Use FileSaver.js by Eli Grey to save ZIP----
+        //-----------------------------------------------
+        function download_zip(pFilename,pZIP) {
+          var vFilename = (pFilename + ".zip") || "my_loaded_files.zip";
+          pZIP.generateAsync({type:"blob"}).then(function (blob) { // 1) generate the zip file
+            saveAs(blob, vFilename);                          // 2) trigger the download
+          }, function (err) {
+            console.error("ERROR: generation of zip-file '" + vFilename + "' - "+err);
+          });
+        }
+        //-----------------------------------------------
+
+    </script>
+  </head>
+  <body onload="lf4d.create()"  style="font-family:Arial,Verdana; font-size:12pt; color:black" bgcolor="#D0D0D0">
+    <h2>LoadFile4DOM - Demo Load ZIP File and add multiple Files to ZIP</h2>
+    <ul>
+      <li>
+        <b>Button:</b> In general the `onclick`-event on buttons is used to
+        create <button onclick="lf4d.open_dialog('loader4zip');return false">Load a ZIP-File to JSON</button>
+        in a browser.
+      </li>
+      <li>
+        <b>Filename:</b> <input type="text" id="tFilename" value="new_zip_file.zip"> This filename of ZIP will be updated if you load file.
+      </li>
+    </ul>
+
+    <hr>
+    <!-- Inject Loaded Filenames into 'outlist' -->
+    <b>Load File and add to ZIP:</b> <button onclick="lf4d.open_dialog('addfile2zip');return false">Add File to ZIP</button><br>
+    <ul id="outlist">
+    </ul>
+    <hr>
+    <!-- Used Libraries -->
+    After adding files to the ZIP you can press the Button "Save Generated ZIP" to get the result.<br>
+    <button onclick="download_zip(el('tFilename').value,zip);return false">Save Generated ZIP</button>
+    <hr>
+    <h4>Used Libraries for Demo</h4>
+    <ul>
+      <li>
+        <a href="https://www.gitlab.com/niehausbert/loadfile4dom/" target="_blank"><tt>loadfile4dom.js</tt></a> to load files into the browser.
+      </li>
+      <li>
+        <a href="https://stuk.github.io/jszip/" target="_blank"><tt>jszip.js</tt></a> to create an handle ZIP files.
+      </li>
+      <li>
+        <a href="https://github.com/eligrey/FileSaver.js" target="_blank"><tt>filesaver.js</tt></a> to save the generated ZIP as download.
+      </li>
+    </ul>
+    <hr>
+    <center>
+      <b>
+        <a href="index.html">&lt;&lt; Demo Applications with LoadFile4DOM</a>
+      </b>
+    </center>
+
+
+  </body>
+
+</html>
